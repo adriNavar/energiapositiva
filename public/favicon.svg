@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#0d9488" />
+      <stop offset="100%" stop-color="#0f766e" />
+    </linearGradient>
+
+    <!-- Bolt Gradient -->
+    <linearGradient id="boltGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#d1fae5" />
+    </linearGradient>
+
+    <!-- Plus Accent Gradient -->
+    <linearGradient id="plusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <!-- Droplet / Glow filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#064e3b" flood-opacity="0.4" />
+    </filter>
+
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle / Rounded Container -->
+  <rect x="16" y="16" width="480" height="480" rx="120" fill="url(#bgGrad)" filter="url(#glow)" />
+
+  <!-- Subtle Inner Ring Highlight -->
+  <rect x="22" y="22" width="468" height="468" rx="114" fill="none" stroke="#ffffff" stroke-width="4" stroke-opacity="0.25" />
+
+  <!-- Clean Bubbles / Droplets Background Elements -->
+  <circle cx="120" cy="130" r="28" fill="#ffffff" fill-opacity="0.12" />
+  <circle cx="100" cy="190" r="14" fill="#ffffff" fill-opacity="0.08" />
+  <circle cx="390" cy="380" r="32" fill="#ffffff" fill-opacity="0.12" />
+  <circle cx="420" cy="310" r="18" fill="#ffffff" fill-opacity="0.09" />
+  <circle cx="360" cy="120" r="20" fill="#ffffff" fill-opacity="0.15" />
+
+  <!-- Main Energy Bolt Icon -->
+  <g filter="url(#softGlow)">
+    <!-- Stylized Energy Lightning Bolt -->
+    <path 
+      d="M275 60 L140 270 L240 270 L195 452 L372 230 L272 230 Z" 
+      fill="url(#boltGrad)" 
+      stroke="#ffffff" 
+      stroke-width="6" 
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+
+    <!-- The Bold Plus (+) Sign of Energia + -->
+    <g transform="translate(330, 110)">
+      <circle cx="28" cy="28" r="42" fill="#10b981" stroke="#ffffff" stroke-width="6" filter="url(#glow)" />
+      <!-- Horizontal bar -->
+      <rect x="12" y="22" width="32" height="12" rx="6" fill="#ffffff" />
+      <!-- Vertical bar -->
+      <rect x="22" y="12" width="12" height="32" rx="6" fill="#ffffff" />
+    </g>
+
+    <!-- Sparkle Stars for Cleanliness -->
+    <!-- Sparkle 1 Top Left -->
+    <path d="M125 350 Q135 365 150 365 Q135 365 125 380 Q115 365 100 365 Q115 365 125 350 Z" fill="#ffffff" fill-opacity="0.9" />
+    
+    <!-- Sparkle 2 Small Right -->
+    <path d="M370 290 Q376 300 386 300 Q376 300 370 310 Q364 300 354 300 Q364 300 370 290 Z" fill="#ffffff" fill-opacity="0.8" />
+  </g>
+</svg>
