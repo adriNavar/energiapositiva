@@ -17,7 +17,10 @@ import {
   History,
   TrendingUp,
   Edit2,
-  Calendar
+  Calendar,
+  Eye,
+  Receipt,
+  Package
 } from 'lucide-react';
 
 const CATALOG_ITEMS_PER_PAGE = 8;
@@ -53,6 +56,9 @@ export default function SalesTab({
   const [editDate, setEditDate] = useState('');
   const [editAmount, setEditAmount] = useState('');
   const [editItems, setEditItems] = useState([]);
+
+  // Estado para Modal de Detalle de Venta (El Ojito 👁️)
+  const [viewingSale, setViewingSale] = useState(null);
 
   const startEditSale = (s) => {
     setEditingSale(s);
@@ -250,6 +256,116 @@ export default function SalesTab({
         <div className="bg-emerald-600 text-white font-bold p-2.5 rounded-xl shadow-lg flex items-center gap-2 text-xs animate-bounce">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{notification}</span>
+        </div>
+      )}
+
+      {/* Modal para Ver Detalle del Pedido (El Ojito 👁️) */}
+      {viewingSale && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl p-5 w-full max-w-sm space-y-3.5 shadow-2xl border-2 border-slate-200 max-h-[90vh] overflow-y-auto">
+            {/* Cabecera del Modal */}
+            <div className="flex items-center justify-between pb-2.5 border-b-2 border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 border-2 border-blue-300 text-blue-700 flex items-center justify-center font-bold">
+                  <Receipt className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-sm">Detalle del Pedido</h3>
+                  <span className="text-[10px] text-slate-500 font-bold block">{formatDate(viewingSale.date)}</span>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setViewingSale(null)}
+                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Ficha Resumen del Cliente y Pago */}
+            <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-3 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-bold">Cliente:</span>
+                <span className="font-black text-slate-900 text-sm">
+                  {viewingSale.customer?.trim() || 'Cliente Ocasional'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-bold">Medio de pago:</span>
+                <span className="font-extrabold text-slate-800 bg-white px-2 py-0.5 rounded-lg border border-slate-200">
+                  {viewingSale.paymentMethod || 'Efectivo'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500 font-bold">Estado:</span>
+                <span className="font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200">
+                  ✓ Cobrado
+                </span>
+              </div>
+            </div>
+
+            {/* Grilla / Desglose de Productos */}
+            <div className="space-y-1.5">
+              <div className="text-[11px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1.5">
+                <Package className="w-3.5 h-3.5 text-blue-600" />
+                <span>Productos del Pedido</span>
+              </div>
+
+              {viewingSale.items && Array.isArray(viewingSale.items) && viewingSale.items.length > 0 ? (
+                <div className="border-2 border-slate-200 rounded-2xl overflow-hidden divide-y-2 divide-slate-100 max-h-56 overflow-y-auto">
+                  {viewingSale.items.map((it, idx) => (
+                    <div key={idx} className="p-2.5 bg-white flex items-center justify-between text-xs">
+                      <div className="min-w-0 pr-2">
+                        <div className="font-black text-slate-900 truncate">{it.name}</div>
+                        <div className="text-[11px] text-slate-500 font-semibold">
+                          {it.qty} {it.unit || 'u.'} × {formatCurrency(it.price)}
+                        </div>
+                      </div>
+                      <div className="font-black text-slate-900 text-xs shrink-0">
+                        {formatCurrency((Number(it.qty) || 1) * (Number(it.price) || 0))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-xs text-slate-700 font-bold">
+                  {viewingSale.title || 'Venta registrada'}
+                </div>
+              )}
+            </div>
+
+            {/* Total Cobrado */}
+            <div className="bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-3 flex items-center justify-between">
+              <span className="font-black text-emerald-950 text-xs">Total Cobrado</span>
+              <span className="font-black text-emerald-700 text-lg">
+                +{formatCurrency(viewingSale.amount)}
+              </span>
+            </div>
+
+            {/* Botones del Modal */}
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const s = viewingSale;
+                  setViewingSale(null);
+                  startEditSale(s);
+                }}
+                className="flex-1 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 border-2 border-amber-500 active:scale-95 transition-all shadow-xs"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                <span>Editar Venta</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewingSale(null)}
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-black py-2.5 rounded-xl text-xs flex items-center justify-center active:scale-95 transition-all shadow-xs"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -661,42 +777,102 @@ export default function SalesTab({
             </div>
           ) : (
             <div className="space-y-2">
-              {paginatedSales.map(s => (
-                <div 
-                  key={s.id}
-                  className="bg-white border-2 border-slate-300 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-xs text-xs"
-                >
-                  <div className="truncate flex-1 min-w-0">
-                    <div className="font-black text-slate-900 truncate">
-                      {s.customer && <span className="text-emerald-700 font-black mr-1">[{s.customer}]</span>}
-                      {s.title}
-                    </div>
-                    <div className="text-[11px] text-slate-500 font-bold mt-0.5">
-                      {formatDate(s.date)} • {s.paymentMethod} • <span className="text-emerald-700 font-black">✓ Cobrado</span>
-                    </div>
-                  </div>
+              {paginatedSales.map(s => {
+                const clientName = s.customer?.trim() || 'Venta directa';
+                const itemsCount = s.items && Array.isArray(s.items) 
+                  ? s.items.reduce((sum, it) => sum + (Number(it.qty) || 1), 0)
+                  : 0;
+                const productsCount = s.items && Array.isArray(s.items) ? s.items.length : 0;
+                
+                // Resumen limpio y legible de productos (sin cadenas tipo JSON o código)
+                let itemsSummaryText = '';
+                if (productsCount > 0) {
+                  if (productsCount === 1) {
+                    itemsSummaryText = `${s.items[0].name} (${s.items[0].qty} ${s.items[0].unit || 'u.'})`;
+                  } else {
+                    itemsSummaryText = `${s.items[0].name} y +${productsCount - 1} más`;
+                  }
+                } else {
+                  itemsSummaryText = s.title?.replace(/^Pedido:\s*[^()]*\((.*)\)$/, '$1') || 'Venta directa';
+                }
 
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="font-black text-slate-900 text-xs">
-                      +{formatCurrency(s.amount)}
-                    </span>
-                    <button 
-                      onClick={() => startEditSale(s)}
-                      className="w-8 h-8 bg-amber-400 hover:bg-amber-500 text-amber-950 border-2 border-amber-500 rounded-xl flex items-center justify-center font-bold shadow-xs transition-all active:scale-90"
-                      title="Editar Venta"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button 
-                      onClick={() => onDeleteSale(s.id)}
-                      className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white border-2 border-red-700 rounded-xl flex items-center justify-center font-bold shadow-xs transition-all active:scale-90"
-                      title="Eliminar Venta"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                return (
+                  <div 
+                    key={s.id}
+                    className="bg-white border-2 border-slate-300 rounded-2xl p-3 space-y-2.5 shadow-xs text-xs hover:border-slate-400 transition-all"
+                  >
+                    {/* Fila 1: Cliente + Ítems + Monto */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 border-2 border-emerald-300 flex items-center justify-center font-black text-xs shrink-0">
+                          {clientName.charAt(0).toUpperCase()}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-black text-slate-900 text-sm truncate">
+                            {clientName}
+                          </div>
+                          <div className="text-[11px] text-slate-500 font-semibold truncate">
+                            {productsCount > 0 ? (
+                              <span>
+                                <strong className="text-slate-700">{productsCount} {productsCount === 1 ? 'producto' : 'productos'}</strong> ({itemsCount} {itemsCount === 1 ? 'u./L' : 'u./L'}) • {itemsSummaryText}
+                              </span>
+                            ) : (
+                              <span>{itemsSummaryText}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="font-black text-emerald-800 text-sm shrink-0 whitespace-nowrap bg-emerald-50 border-2 border-emerald-200 px-2.5 py-1 rounded-xl">
+                        +{formatCurrency(s.amount)}
+                      </span>
+                    </div>
+
+                    {/* Fila 2: Metadata (Fecha / Pago) + Acciones (Ojito, Editar, Borrar) */}
+                    <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 text-[11px]">
+                      <div className="text-slate-500 font-bold flex items-center gap-1.5 truncate">
+                        <span>{formatDate(s.date)}</span>
+                        <span>•</span>
+                        <span className="text-slate-700 font-black">{s.paymentMethod || 'Efectivo'}</span>
+                        <span>•</span>
+                        <span className="text-emerald-700 font-black">✓ Cobrado</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                        {/* 1. Botón Ojito para ver el detalle completo en modal */}
+                        <button 
+                          type="button"
+                          onClick={() => setViewingSale(s)}
+                          className="w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-300 rounded-xl flex items-center justify-center font-bold shadow-2xs transition-all active:scale-90"
+                          title="Ver detalle del pedido"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+
+                        {/* 2. Botón Editar */}
+                        <button 
+                          type="button"
+                          onClick={() => startEditSale(s)}
+                          className="w-8 h-8 bg-amber-400 hover:bg-amber-500 text-amber-950 border-2 border-amber-500 rounded-xl flex items-center justify-center font-bold shadow-2xs transition-all active:scale-90"
+                          title="Editar Venta"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* 3. Botón Eliminar */}
+                        <button 
+                          type="button"
+                          onClick={() => onDeleteSale(s.id)}
+                          className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white border-2 border-red-700 rounded-xl flex items-center justify-center font-bold shadow-2xs transition-all active:scale-90"
+                          title="Eliminar Venta"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
