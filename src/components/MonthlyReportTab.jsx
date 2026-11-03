@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { formatCurrency, formatPercent, formatDate } from '../utils/formatters';
+import { formatCurrency, formatPercent, formatDate, getArgentinaYearMonth } from '../utils/formatters';
 import { EXPENSE_CATEGORIES } from '../data/initialData';
 import DebtsTab from './DebtsTab';
 import DateFilterBar, { filterItemsByDate } from './DateFilterBar';
@@ -64,8 +64,9 @@ export default function MonthlyReportTab({
   const activeTransactions = useMemo(() => {
     if (dateFilter === 'mes') {
       return transactions.filter(t => {
-        const d = new Date(t.date);
-        return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+        if (!t.date) return false;
+        const ym = getArgentinaYearMonth(t.date);
+        return ym.year === selectedYear && ym.month === selectedMonth;
       });
     }
     return filterItemsByDate(transactions, dateFilter, startDate, endDate);

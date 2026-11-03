@@ -21,7 +21,7 @@ import {
   RotateCcw,
   Sparkles
 } from 'lucide-react';
-import { formatDate, formatCurrency } from '../utils/formatters';
+import { formatDate, formatCurrency, getArgentinaDateString, getArgentinaYearMonth, ARGENTINA_TIMEZONE } from '../utils/formatters';
 import { subscribeToAuditLogs, clearAllAuditLogs } from '../services/auditService';
 import { getLocalUsers, saveUserToCloud, deleteUserFromCloud } from '../services/authService';
 
@@ -57,7 +57,8 @@ export default function AuditTab({ currentUser }) {
   // Filtrado de logs
   const filteredLogs = useMemo(() => {
     const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
+    const todayStr = getArgentinaDateString(now);
+    const nowYM = getArgentinaYearMonth(now);
 
     return logs.filter(log => {
       // 1. Filtro por usuario
@@ -72,16 +73,16 @@ export default function AuditTab({ currentUser }) {
         if (log.category !== selectedCategoryFilter) return false;
       }
 
-      // 3. Filtro por fecha
+      // 3. Filtro por fecha (Hora local Argentina)
       if (selectedDateFilter === 'hoy') {
-        if (!log.timestamp?.startsWith(todayStr)) return false;
+        if (getArgentinaDateString(log.timestamp) !== todayStr) return false;
       } else if (selectedDateFilter === 'semana') {
         const logDate = new Date(log.timestamp);
-        const diffDays = (now - logDate) / (1000 * 60 * 60 * 24);
+        const diffDays = (now.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24);
         if (diffDays > 7) return false;
       } else if (selectedDateFilter === 'mes') {
-        const logDate = new Date(log.timestamp);
-        if (logDate.getMonth() !== now.getMonth() || logDate.getFullYear() !== now.getFullYear()) {
+        const logYM = getArgentinaYearMonth(log.timestamp);
+        if (logYM.year !== nowYM.year || logYM.month !== nowYM.month) {
           return false;
         }
       }
@@ -101,8 +102,8 @@ export default function AuditTab({ currentUser }) {
 
   // Métricas rápidas
   const todayCount = useMemo(() => {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    return logs.filter(l => l.timestamp?.startsWith(todayStr)).length;
+    const todayStr = getArgentinaDateString(new Date());
+    return logs.filter(l => getArgentinaDateString(l.timestamp) === todayStr).length;
   }, [logs]);
 
   const salesAuditCount = useMemo(() => {
@@ -113,12 +114,18 @@ export default function AuditTab({ currentUser }) {
     return logs.filter(l => l.category === 'gastos').length;
   }, [logs]);
 
-  // Formato de hora legible
+  // Formato de hora legible en zona horaria argentina
   const formatTime = (isoString) => {
     if (!isoString) return '';
     try {
       const d = new Date(isoString);
-      return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      return d.toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: ARGENTINA_TIMEZONE
+      });
     } catch {
       return '';
     }

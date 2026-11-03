@@ -11,6 +11,7 @@ import {
 } from '../data/initialData';
 
 import { saveFieldToCloud, clearCloudData, loadDemoCloudData, saveAllToCloud } from '../services/firebaseSync';
+import { getArgentinaDateString } from './formatters';
 
 const KEYS = {
   TRANSACTIONS: 'energia_plus_transactions_v3',
@@ -53,16 +54,7 @@ export function clearAllData() {
 export function loadStoredData() {
   try {
     if (!localStorage.getItem(CLEAN_INIT_FLAG)) {
-      clearAllData();
       localStorage.setItem(CLEAN_INIT_FLAG, 'true');
-      return {
-        transactions: [],
-        products: [],
-        recipes: [],
-        debts: [],
-        categories: DEFAULT_PRODUCT_CATEGORIES,
-        preparations: [],
-      };
     }
 
     const rawTx = localStorage.getItem(KEYS.TRANSACTIONS);
@@ -73,20 +65,20 @@ export function loadStoredData() {
     const rawPrep = localStorage.getItem(KEYS.PREPARATIONS);
 
     return {
-      transactions: rawTx !== null ? JSON.parse(rawTx) : INITIAL_TRANSACTIONS,
-      products: rawProd !== null ? JSON.parse(rawProd) : INITIAL_PRODUCTS,
-      recipes: rawRec !== null ? JSON.parse(rawRec) : INITIAL_RECIPES,
-      debts: rawDebts !== null ? JSON.parse(rawDebts) : INITIAL_DEBTS,
+      transactions: rawTx !== null ? JSON.parse(rawTx) : [],
+      products: rawProd !== null ? JSON.parse(rawProd) : [],
+      recipes: rawRec !== null ? JSON.parse(rawRec) : [],
+      debts: rawDebts !== null ? JSON.parse(rawDebts) : [],
       categories: rawCats !== null ? JSON.parse(rawCats) : DEFAULT_PRODUCT_CATEGORIES,
       preparations: rawPrep !== null ? JSON.parse(rawPrep) : [],
     };
   } catch (error) {
     console.error('Error al cargar datos de localStorage:', error);
     return {
-      transactions: INITIAL_TRANSACTIONS,
-      products: INITIAL_PRODUCTS,
-      recipes: INITIAL_RECIPES,
-      debts: INITIAL_DEBTS,
+      transactions: [],
+      products: [],
+      recipes: [],
+      debts: [],
       categories: DEFAULT_PRODUCT_CATEGORIES,
       preparations: [],
     };
@@ -179,7 +171,7 @@ export function exportBackup() {
   const blob = new Blob([jsonStr], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   
-  const now = new Date().toISOString().slice(0, 10);
+  const now = getArgentinaDateString();
   const a = document.createElement('a');
   a.href = url;
   a.download = `respaldo-energia-plus-${now}.json`;

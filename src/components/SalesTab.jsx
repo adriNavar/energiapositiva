@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatCurrency, formatDate, getArgentinaDateString } from '../utils/formatters';
 import CategoryCombobox from './CategoryCombobox';
 import DateFilterBar, { filterItemsByDate } from './DateFilterBar';
 import { 
@@ -58,7 +58,7 @@ export default function SalesTab({
     setEditingSale(s);
     setEditCustomer(s.customer || '');
     setEditPaymentMethod(s.paymentMethod || 'Efectivo');
-    setEditDate(s.date ? s.date.slice(0, 10) : new Date().toISOString().slice(0, 10));
+    setEditDate(s.date ? getArgentinaDateString(s.date) : getArgentinaDateString());
     setEditAmount(String(s.amount || ''));
     setEditItems(s.items && Array.isArray(s.items) ? JSON.parse(JSON.stringify(s.items)) : []);
   };

@@ -1,14 +1,9 @@
 import React from 'react';
 import { Calendar, X } from 'lucide-react';
+import { getArgentinaDateString, ARGENTINA_TIMEZONE } from '../utils/formatters';
 
 export function getLocalDateString(dateInput) {
-  if (!dateInput) return '';
-  const d = new Date(dateInput);
-  if (isNaN(d.getTime())) return '';
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return getArgentinaDateString(dateInput);
 }
 
 export function filterItemsByDate(items = [], filterType = 'todos', startDate = '', endDate = '') {
@@ -16,12 +11,12 @@ export function filterItemsByDate(items = [], filterType = 'todos', startDate = 
   if (filterType === 'todos') return items;
 
   const now = new Date();
-  const todayStr = getLocalDateString(now);
+  const todayStr = getArgentinaDateString(now);
 
   if (filterType === 'hoy') {
     return items.filter(item => {
       if (!item.date) return false;
-      return getLocalDateString(item.date) === todayStr;
+      return getArgentinaDateString(item.date) === todayStr;
     });
   }
 
@@ -29,30 +24,27 @@ export function filterItemsByDate(items = [], filterType = 'todos', startDate = 
     const day = now.getDay();
     const diff = now.getDate() - day + (day === 0 ? -6 : 1);
     const startOfWeek = new Date(now.getFullYear(), now.getMonth(), diff, 0, 0, 0, 0);
-    const startOfWeekStr = getLocalDateString(startOfWeek);
+    const startOfWeekStr = getArgentinaDateString(startOfWeek);
 
     return items.filter(item => {
       if (!item.date) return false;
-      const itemStr = getLocalDateString(item.date);
-      return itemStr >= startOfWeekStr && itemStr <= todayStr;
+      const itemStr = getArgentinaDateString(item.date);
+      return itemStr >= startOfWeekStr;
     });
   }
 
   if (filterType === 'mes') {
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    const startOfMonthStr = getLocalDateString(startOfMonth);
-
+    const currentMonthPrefix = todayStr.slice(0, 7); // 'YYYY-MM'
     return items.filter(item => {
       if (!item.date) return false;
-      const itemStr = getLocalDateString(item.date);
-      return itemStr >= startOfMonthStr && itemStr <= todayStr;
+      return getArgentinaDateString(item.date).startsWith(currentMonthPrefix);
     });
   }
 
   if (filterType === 'custom') {
     return items.filter(item => {
       if (!item.date) return false;
-      const itemStr = getLocalDateString(item.date);
+      const itemStr = getArgentinaDateString(item.date);
       if (startDate && itemStr < startDate) return false;
       if (endDate && itemStr > endDate) return false;
       return true;
@@ -117,8 +109,8 @@ export default function DateFilterBar({
               <button
                 type="button"
                 onClick={() => {
-                  onStartDateChange('');
-                  onEndDateChange('');
+                  if (onStartDateChange) onStartDateChange('');
+                  if (onEndDateChange) onEndDateChange('');
                 }}
                 className="text-slate-500 hover:text-slate-800 flex items-center gap-0.5 text-xs font-bold"
               >
@@ -134,7 +126,7 @@ export default function DateFilterBar({
               <input
                 type="date"
                 value={startDate}
-                onChange={e => onStartDateChange(e.target.value)}
+                onChange={e => onStartDateChange && onStartDateChange(e.target.value)}
                 className="w-full bg-white border-2 border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600"
               />
             </div>
@@ -143,7 +135,7 @@ export default function DateFilterBar({
               <input
                 type="date"
                 value={endDate}
-                onChange={e => onEndDateChange(e.target.value)}
+                onChange={e => onEndDateChange && onEndDateChange(e.target.value)}
                 className="w-full bg-white border-2 border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600"
               />
             </div>

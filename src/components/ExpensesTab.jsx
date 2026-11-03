@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { formatCurrency, formatDate } from '../utils/formatters';
+import { formatCurrency, formatDate, getArgentinaDateString } from '../utils/formatters';
 import { EXPENSE_CATEGORIES } from '../data/initialData';
 import DateFilterBar, { filterItemsByDate } from './DateFilterBar';
 import HabitualExpenseCombobox from './HabitualExpenseCombobox';
@@ -114,7 +114,7 @@ export default function ExpensesTab({
     setEditCategory(exp.category || 'varios');
     setEditPaymentMethod(exp.paymentMethod || 'Efectivo');
     setEditSupplier(exp.supplier || '');
-    setEditDate(exp.date ? exp.date.slice(0, 10) : new Date().toISOString().slice(0, 10));
+    setEditDate(exp.date ? getArgentinaDateString(exp.date) : getArgentinaDateString());
   };
 
   const handleSaveEditExpense = (e) => {
