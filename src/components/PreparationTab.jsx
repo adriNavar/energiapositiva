@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import CategoryCombobox from './CategoryCombobox';
 import DateFilterBar, { filterItemsByDate } from './DateFilterBar';
+import PaginationControls from './PaginationControls';
 import { 
   FlaskConical, 
   Plus, 
@@ -44,6 +45,8 @@ export default function PreparationTab({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [historySearchTerm, setHistorySearchTerm] = useState('');
+  const [historyPage, setHistoryPage] = useState(1);
+  const PREPARATIONS_PER_PAGE = 6;
 
   const filteredPreparations = useMemo(() => {
     let list = filterItemsByDate(preparations, dateFilter, startDate, endDate);
@@ -56,6 +59,16 @@ export default function PreparationTab({
     }
     return list;
   }, [preparations, dateFilter, startDate, endDate, historySearchTerm]);
+
+  useEffect(() => {
+    setHistoryPage(1);
+  }, [historySearchTerm, dateFilter, startDate, endDate]);
+
+  const totalHistoryPages = Math.max(1, Math.ceil(filteredPreparations.length / PREPARATIONS_PER_PAGE));
+  const paginatedPreparations = filteredPreparations.slice(
+    (historyPage - 1) * PREPARATIONS_PER_PAGE,
+    historyPage * PREPARATIONS_PER_PAGE
+  );
 
   const totalYieldInFilter = useMemo(() => {
     return filteredPreparations.reduce((sum, p) => sum + (parseFloat(p.yieldQty) || 0), 0);
@@ -704,67 +717,76 @@ export default function PreparationTab({
             </div>
           ) : (
             <div className="space-y-2.5">
-              {filteredPreparations.map(prep => (
-                <div
-                  key={prep.id}
-                  className="bg-white border border-slate-300 rounded-2xl p-3.5 shadow-sm space-y-2"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <h4 className="font-bold text-slate-900 text-xs">{prep.finishedName}</h4>
+              <div className="space-y-2.5">
+                {paginatedPreparations.map(prep => (
+                  <div
+                    key={prep.id}
+                    className="bg-white border border-slate-300 rounded-2xl p-3.5 shadow-sm space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <h4 className="font-bold text-slate-900 text-xs">{prep.finishedName}</h4>
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          <span>{formatDate(prep.date)}</span>
+                        </div>
                       </div>
-                      <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>{formatDate(prep.date)}</span>
+
+                      <div className="flex items-center gap-1.5">
+                        <span className="bg-emerald-50 text-emerald-700 font-bold text-[11px] px-2.5 py-0.5 rounded-lg border border-emerald-200/70">
+                          +{prep.yieldQty} {prep.unit || 'L'}
+                        </span>
+                        {onDeletePreparation && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`¿Eliminar este registro de preparación de "${prep.finishedName}"?`)) {
+                                onDeletePreparation(prep.id);
+                              }
+                            }}
+                            className="w-7 h-7 bg-red-600 hover:bg-red-700 text-white border-2 border-red-700 rounded-xl flex items-center justify-center font-bold shadow-xs active:scale-95 transition-all"
+                            title="Eliminar Preparación"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
-                      <span className="bg-emerald-50 text-emerald-700 font-bold text-[11px] px-2.5 py-0.5 rounded-lg border border-emerald-200/70">
-                        +{prep.yieldQty} {prep.unit || 'L'}
-                      </span>
-                      {onDeletePreparation && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`¿Eliminar este registro de preparación de "${prep.finishedName}"?`)) {
-                              onDeletePreparation(prep.id);
-                            }
-                          }}
-                          className="w-7 h-7 bg-red-600 hover:bg-red-700 text-white border-2 border-red-700 rounded-xl flex items-center justify-center font-bold shadow-xs active:scale-95 transition-all"
-                          title="Eliminar Preparación"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                    {/* Insumos descontados */}
+                    {prep.ingredients && prep.ingredients.length > 0 && (
+                      <div className="bg-slate-50 rounded-xl p-2 text-xs space-y-0.5 border border-slate-100">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                          Insumos descontados:
+                        </span>
+                        {prep.ingredients.map((ing, i) => (
+                          <div key={i} className="flex items-center justify-between text-slate-600 text-[11px]">
+                            <span>• {ing.name}</span>
+                            <span className="font-bold text-slate-900">-{ing.qty} {ing.unit || 'L'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100">
+                      <span>Venta: <strong className="text-slate-900">{formatCurrency(prep.sellPrice)} / {prep.unit?.slice(0, -1) || 'L'}</strong></span>
+                      {prep.unitCost > 0 && (
+                        <span>Costo: <strong className="text-slate-900">{formatCurrency(prep.unitCost)} / {prep.unit?.slice(0, -1) || 'L'}</strong></span>
                       )}
                     </div>
                   </div>
+                ))}
+              </div>
 
-                  {/* Insumos descontados */}
-                  {prep.ingredients && prep.ingredients.length > 0 && (
-                    <div className="bg-slate-50 rounded-xl p-2 text-xs space-y-0.5 border border-slate-100">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Insumos descontados:
-                      </span>
-                      {prep.ingredients.map((ing, i) => (
-                        <div key={i} className="flex items-center justify-between text-slate-600 text-[11px]">
-                          <span>• {ing.name}</span>
-                          <span className="font-bold text-slate-900">-{ing.qty} {ing.unit || 'L'}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100">
-                    <span>Venta: <strong className="text-slate-900">{formatCurrency(prep.sellPrice)} / {prep.unit?.slice(0, -1) || 'L'}</strong></span>
-                    {prep.unitCost > 0 && (
-                      <span>Costo: <strong className="text-slate-900">{formatCurrency(prep.unitCost)} / {prep.unit?.slice(0, -1) || 'L'}</strong></span>
-                    )}
-                  </div>
-                </div>
-              ))}
+              {/* Paginación de Preparados */}
+              <PaginationControls
+                currentPage={historyPage}
+                totalPages={totalHistoryPages}
+                onPageChange={setHistoryPage}
+              />
             </div>
           )}
         </div>

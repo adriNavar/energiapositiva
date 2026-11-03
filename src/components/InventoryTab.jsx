@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { formatCurrency } from '../utils/formatters';
 import CategoryCombobox from './CategoryCombobox';
+import PaginationControls from './PaginationControls';
 import { 
   Boxes, 
   Plus, 
@@ -576,31 +577,11 @@ export default function InventoryTab({
       </div>
 
       {/* Controles de Paginación */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-1 text-xs text-slate-600">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-300 bg-white font-bold disabled:opacity-40 hover:bg-slate-50 active:scale-95 transition-all shadow-2xs"
-          >
-            <ChevronLeft className="w-3.5 h-3.5" />
-            <span>Anterior</span>
-          </button>
-
-          <span className="font-semibold text-[11px]">
-            Página <strong className="text-slate-900">{currentPage}</strong> de {totalPages}
-          </span>
-
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-300 bg-white font-bold disabled:opacity-40 hover:bg-slate-50 active:scale-95 transition-all shadow-2xs"
-          >
-            <span>Siguiente</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }

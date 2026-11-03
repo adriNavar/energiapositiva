@@ -24,6 +24,7 @@ import {
 import { formatDate, formatCurrency, getArgentinaDateString, getArgentinaYearMonth, ARGENTINA_TIMEZONE } from '../utils/formatters';
 import { subscribeToAuditLogs, clearAllAuditLogs } from '../services/auditService';
 import { getLocalUsers, saveUserToCloud, deleteUserFromCloud } from '../services/authService';
+import PaginationControls from './PaginationControls';
 
 export default function AuditTab({ currentUser }) {
   const [logs, setLogs] = useState([]);
@@ -32,6 +33,8 @@ export default function AuditTab({ currentUser }) {
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('todas');
   const [selectedDateFilter, setSelectedDateFilter] = useState('todos'); // 'hoy' | 'semana' | 'mes' | 'todos'
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const LOGS_PER_PAGE = 10;
   const [expandedLogId, setExpandedLogId] = useState(null);
   const [notification, setNotification] = useState('');
 
@@ -99,6 +102,16 @@ export default function AuditTab({ currentUser }) {
       return true;
     });
   }, [logs, selectedUserFilter, selectedCategoryFilter, selectedDateFilter, searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedUserFilter, selectedCategoryFilter, selectedDateFilter, searchTerm]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredLogs.length / LOGS_PER_PAGE));
+  const paginatedLogs = filteredLogs.slice(
+    (currentPage - 1) * LOGS_PER_PAGE,
+    currentPage * LOGS_PER_PAGE
+  );
 
   // Métricas rápidas
   const todayCount = useMemo(() => {
@@ -337,7 +350,9 @@ export default function AuditTab({ currentUser }) {
             <p className="text-[10px] text-slate-400">Cada venta, modificación de precio, gasto o login quedará registrado acá.</p>
           </div>
         ) : (
-          filteredLogs.map((item, idx) => {
+          <div className="space-y-2">
+            <div className="space-y-2">
+              {paginatedLogs.map((item, idx) => {
             const isExpanded = expandedLogId === (item.id || idx);
 
             // Icono y color por categoría
@@ -429,7 +444,16 @@ export default function AuditTab({ currentUser }) {
                 )}
               </div>
             );
-          })
+          })}
+          </div>
+
+          {/* Paginación de Auditoría */}
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
         )}
       </div>
 

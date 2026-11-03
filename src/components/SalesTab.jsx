@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { formatCurrency, formatDate, getArgentinaDateString } from '../utils/formatters';
 import CategoryCombobox from './CategoryCombobox';
 import DateFilterBar, { filterItemsByDate } from './DateFilterBar';
+import PaginationControls from './PaginationControls';
 import { 
   Trash2, 
   Banknote, 
@@ -693,25 +694,11 @@ export default function SalesTab({
             )}
 
             {/* Paginación */}
-            {totalCatalogPages > 1 && (
-              <div className="flex items-center justify-between pt-1 px-1 text-xs text-slate-700 font-bold">
-                <button
-                  disabled={catalogPage === 1}
-                  onClick={() => setCatalogPage(p => Math.max(1, p - 1))}
-                  className="px-3 py-1.5 rounded-xl border-2 border-slate-300 bg-white font-black disabled:opacity-40 hover:bg-slate-50 shadow-2xs transition-all"
-                >
-                  Anterior
-                </button>
-                <span className="text-xs font-bold">Página <strong className="text-slate-900 font-black">{catalogPage}</strong> de {totalCatalogPages}</span>
-                <button
-                  disabled={catalogPage === totalCatalogPages}
-                  onClick={() => setCatalogPage(p => Math.min(totalCatalogPages, p + 1))}
-                  className="px-3 py-1.5 rounded-xl border-2 border-slate-300 bg-white font-black disabled:opacity-40 hover:bg-slate-50 shadow-2xs transition-all"
-                >
-                  Siguiente
-                </button>
-              </div>
-            )}
+            <PaginationControls
+              currentPage={catalogPage}
+              totalPages={totalCatalogPages}
+              onPageChange={setCatalogPage}
+            />
           </div>
         </div>
       ) : (
@@ -850,25 +837,11 @@ export default function SalesTab({
           )}
 
           {/* Paginación */}
-          {totalHistoryPages > 1 && (
-            <div className="flex items-center justify-between pt-1 px-1 text-xs text-slate-700 font-bold">
-              <button
-                disabled={historyPage === 1}
-                onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
-                className="px-3 py-1.5 rounded-xl border-2 border-slate-300 bg-white font-black disabled:opacity-40 hover:bg-slate-50 shadow-2xs transition-all"
-              >
-                Anterior
-              </button>
-              <span className="text-xs font-bold">Página <strong className="text-slate-900 font-black">{historyPage}</strong> de {totalHistoryPages}</span>
-              <button
-                disabled={historyPage === totalHistoryPages}
-                onClick={() => setHistoryPage(p => Math.min(totalHistoryPages, p + 1))}
-                className="px-3 py-1.5 rounded-xl border-2 border-slate-300 bg-white font-black disabled:opacity-40 hover:bg-slate-50 shadow-2xs transition-all"
-              >
-                Siguiente
-              </button>
-            </div>
-          )}
+          <PaginationControls
+            currentPage={historyPage}
+            totalPages={totalHistoryPages}
+            onPageChange={setHistoryPage}
+          />
         </div>
       )}
 

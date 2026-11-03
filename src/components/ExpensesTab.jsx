@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { formatCurrency, formatDate, getArgentinaDateString } from '../utils/formatters';
 import { EXPENSE_CATEGORIES } from '../data/initialData';
 import DateFilterBar, { filterItemsByDate } from './DateFilterBar';
 import HabitualExpenseCombobox from './HabitualExpenseCombobox';
+import PaginationControls from './PaginationControls';
 import { 
   Minus, 
   Trash2, 
@@ -37,6 +38,8 @@ export default function ExpensesTab({
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const EXPENSES_PER_PAGE = 8;
 
   // Edición de gasto
   const [editingExpense, setEditingExpense] = useState(null);
@@ -149,6 +152,16 @@ export default function ExpensesTab({
     }
     return list;
   }, [expenses, dateFilter, startDate, endDate, searchTerm]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, dateFilter, startDate, endDate]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredExpenses.length / EXPENSES_PER_PAGE));
+  const paginatedExpenses = filteredExpenses.slice(
+    (currentPage - 1) * EXPENSES_PER_PAGE,
+    currentPage * EXPENSES_PER_PAGE
+  );
 
   const totalFilteredExpensesAmount = useMemo(() => {
     return filteredExpenses.reduce((sum, exp) => sum + (Number(exp.amount) || 0), 0);
@@ -506,51 +519,60 @@ export default function ExpensesTab({
           </div>
         ) : (
           <div className="space-y-2">
-            {filteredExpenses.map(exp => (
-              <div 
-                key={exp.id}
-                className="bg-white border-2 border-slate-300 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-xs text-xs"
-              >
-                <div className="truncate flex-1 min-w-0">
-                  <div className="font-black text-slate-900 truncate flex items-center gap-1.5 flex-wrap">
-                    <span>{exp.title}</span>
-                    {exp.supplier && (
-                      <span className="text-[11px] bg-slate-100 text-slate-900 font-bold px-2 py-0.5 rounded border-2 border-slate-300">
-                        Prov: {exp.supplier}
-                      </span>
-                    )}
-                    {exp.isStockPurchase && (
-                      <span className="text-[11px] bg-emerald-100 text-emerald-950 font-black px-2 py-0.5 rounded border-2 border-emerald-300">
-                        +{exp.qtyBought} stock
-                      </span>
-                    )}
+            <div className="space-y-2">
+              {paginatedExpenses.map(exp => (
+                <div 
+                  key={exp.id}
+                  className="bg-white border-2 border-slate-300 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-xs text-xs"
+                >
+                  <div className="truncate flex-1 min-w-0">
+                    <div className="font-black text-slate-900 truncate flex items-center gap-1.5 flex-wrap">
+                      <span>{exp.title}</span>
+                      {exp.supplier && (
+                        <span className="text-[11px] bg-slate-100 text-slate-900 font-bold px-2 py-0.5 rounded border-2 border-slate-300">
+                          Prov: {exp.supplier}
+                        </span>
+                      )}
+                      {exp.isStockPurchase && (
+                        <span className="text-[11px] bg-emerald-100 text-emerald-950 font-black px-2 py-0.5 rounded border-2 border-emerald-300">
+                          +{exp.qtyBought} stock
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-bold mt-0.5">
+                      {formatDate(exp.date)} • {exp.paymentMethod}
+                    </div>
                   </div>
-                  <div className="text-[11px] text-slate-500 font-bold mt-0.5">
-                    {formatDate(exp.date)} • {exp.paymentMethod}
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="font-black text-rose-600 text-xs">
-                    -{formatCurrency(exp.amount)}
-                  </span>
-                  <button 
-                    onClick={() => startEditExpense(exp)}
-                    className="w-8 h-8 bg-amber-400 hover:bg-amber-500 text-amber-950 border-2 border-amber-500 rounded-xl flex items-center justify-center font-bold shadow-xs transition-all active:scale-90"
-                    title="Editar Gasto"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button 
-                    onClick={() => onDeleteExpense(exp.id)}
-                    className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white border-2 border-red-700 rounded-xl flex items-center justify-center font-bold shadow-xs transition-all active:scale-90"
-                    title="Eliminar Gasto"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="font-black text-rose-600 text-xs">
+                      -{formatCurrency(exp.amount)}
+                    </span>
+                    <button 
+                      onClick={() => startEditExpense(exp)}
+                      className="w-8 h-8 bg-amber-400 hover:bg-amber-500 text-amber-950 border-2 border-amber-500 rounded-xl flex items-center justify-center font-bold shadow-xs transition-all active:scale-90"
+                      title="Editar Gasto"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                    <button 
+                      onClick={() => onDeleteExpense(exp.id)}
+                      className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white border-2 border-red-700 rounded-xl flex items-center justify-center font-bold shadow-xs transition-all active:scale-90"
+                      title="Eliminar Gasto"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {/* Paginación de Gastos */}
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
       </div>

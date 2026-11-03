@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { formatCurrency, formatDate } from '../utils/formatters';
+import PaginationControls from './PaginationControls';
 import { 
   Users, 
   CheckCircle, 
@@ -24,9 +25,17 @@ export default function DebtsTab({
   const [productDesc, setProductDesc] = useState('');
   const [amount, setAmount] = useState('');
   const [collectingDebt, setCollectingDebt] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const DEBTS_PER_PAGE = 7;
 
   const pendingDebts = debts.filter(d => d.status === 'pending');
   const totalPending = pendingDebts.reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+
+  const totalPages = Math.max(1, Math.ceil(pendingDebts.length / DEBTS_PER_PAGE));
+  const paginatedDebts = pendingDebts.slice(
+    (currentPage - 1) * DEBTS_PER_PAGE,
+    currentPage * DEBTS_PER_PAGE
+  );
 
   const handleCreate = (e) => {
     e.preventDefault();
@@ -191,52 +200,63 @@ export default function DebtsTab({
             No hay cobros pendientes actualmente.
           </div>
         ) : (
-          pendingDebts.map(d => (
-            <div 
-              key={d.id}
-              className="bg-white border-2 border-slate-300 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-xs text-xs hover:border-slate-400 transition-all"
-            >
-              <div className="truncate flex-1 min-w-0">
-                <div className="font-black text-slate-900 truncate flex items-center gap-1.5">
-                  <User className="w-4 h-4 text-slate-500 shrink-0" />
-                  <span>{d.customerName}</span>
+          <div className="space-y-2">
+            <div className="space-y-2">
+              {paginatedDebts.map(d => (
+                <div 
+                  key={d.id}
+                  className="bg-white border-2 border-slate-300 rounded-2xl p-3 flex items-center justify-between gap-2 shadow-xs text-xs hover:border-slate-400 transition-all"
+                >
+                  <div className="truncate flex-1 min-w-0">
+                    <div className="font-black text-slate-900 truncate flex items-center gap-1.5">
+                      <User className="w-4 h-4 text-slate-500 shrink-0" />
+                      <span>{d.customerName}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 truncate mt-0.5 font-bold">{d.productDesc}</div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="font-black text-amber-900 text-xs mr-0.5">
+                      {formatCurrency(d.amount)}
+                    </span>
+
+                    <button
+                      onClick={() => setCollectingDebt(d)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-xl text-xs flex items-center gap-1 shadow-2xs active:scale-95 transition-all"
+                    >
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Cobrar</span>
+                    </button>
+
+                    <a
+                      href={getWhatsAppLink(d)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/70 flex items-center justify-center hover:bg-emerald-100 active:scale-95 transition-all"
+                      title="WhatsApp"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                    </a>
+
+                    <button
+                      onClick={() => onDeleteDebt(d.id)}
+                      className="w-7 h-7 rounded-xl bg-red-600 text-white border-2 border-red-700 flex items-center justify-center hover:bg-red-700 active:scale-95 transition-all shadow-xs"
+                      title="Eliminar Cuenta"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="text-[11px] text-slate-500 truncate mt-0.5 font-bold">{d.productDesc}</div>
-              </div>
-
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="font-black text-amber-900 text-xs mr-0.5">
-                  {formatCurrency(d.amount)}
-                </span>
-
-                <button
-                  onClick={() => setCollectingDebt(d)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-xl text-xs flex items-center gap-1 shadow-2xs active:scale-95 transition-all"
-                >
-                  <CheckCircle className="w-3 h-3" />
-                  <span>Cobrar</span>
-                </button>
-
-                <a
-                  href={getWhatsAppLink(d)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200/70 flex items-center justify-center hover:bg-emerald-100 active:scale-95 transition-all"
-                  title="WhatsApp"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                </a>
-
-                <button
-                  onClick={() => onDeleteDebt(d.id)}
-                  className="w-7 h-7 rounded-xl bg-red-600 text-white border-2 border-red-700 flex items-center justify-center hover:bg-red-700 active:scale-95 transition-all shadow-xs"
-                  title="Eliminar Cuenta"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
+              ))}
             </div>
-          ))
+
+            {/* Paginación de Cuentas por Cobrar */}
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         )}
       </div>
 
