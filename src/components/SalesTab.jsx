@@ -765,7 +765,7 @@ export default function SalesTab({
             />
           </div>
 
-          {/* Lista de Ventas */}
+          {/* Grilla / Tabla de Ventas */}
           {sales.length === 0 ? (
             <div className="bg-white border-2 border-slate-300 rounded-2xl p-6 text-center text-xs text-slate-600 space-y-1 shadow-xs">
               <p className="font-black text-slate-900 text-sm">Aún no hay ventas registradas.</p>
@@ -776,103 +776,76 @@ export default function SalesTab({
               No se encontraron ventas para ese filtro de fecha o búsqueda.
             </div>
           ) : (
-            <div className="space-y-2">
-              {paginatedSales.map(s => {
-                const clientName = s.customer?.trim() || 'Venta directa';
-                const itemsCount = s.items && Array.isArray(s.items) 
-                  ? s.items.reduce((sum, it) => sum + (Number(it.qty) || 1), 0)
-                  : 0;
-                const productsCount = s.items && Array.isArray(s.items) ? s.items.length : 0;
-                
-                // Resumen limpio y legible de productos (sin cadenas tipo JSON o código)
-                let itemsSummaryText = '';
-                if (productsCount > 0) {
-                  if (productsCount === 1) {
-                    itemsSummaryText = `${s.items[0].name} (${s.items[0].qty} ${s.items[0].unit || 'u.'})`;
-                  } else {
-                    itemsSummaryText = `${s.items[0].name} y +${productsCount - 1} más`;
-                  }
-                } else {
-                  itemsSummaryText = s.title?.replace(/^Pedido:\s*[^()]*\((.*)\)$/, '$1') || 'Venta directa';
-                }
+            <div className="bg-white border-2 border-slate-300 rounded-2xl shadow-xs overflow-hidden">
+              {/* Encabezado de la Grilla */}
+              <div className="grid grid-cols-12 gap-1 px-3 py-2 bg-slate-100 border-b-2 border-slate-200 text-[11px] font-black uppercase tracking-wider text-slate-600 items-center">
+                <div className="col-span-3">Fecha</div>
+                <div className="col-span-4">Cliente</div>
+                <div className="col-span-2 text-right">Monto</div>
+                <div className="col-span-3 text-right pr-1">Acciones</div>
+              </div>
 
-                return (
-                  <div 
-                    key={s.id}
-                    className="bg-white border-2 border-slate-300 rounded-2xl p-3 space-y-2.5 shadow-xs text-xs hover:border-slate-400 transition-all"
-                  >
-                    {/* Fila 1: Cliente + Ítems + Monto */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 border-2 border-emerald-300 flex items-center justify-center font-black text-xs shrink-0">
-                          {clientName.charAt(0).toUpperCase()}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="font-black text-slate-900 text-sm truncate">
-                            {clientName}
-                          </div>
-                          <div className="text-[11px] text-slate-500 font-semibold truncate">
-                            {productsCount > 0 ? (
-                              <span>
-                                <strong className="text-slate-700">{productsCount} {productsCount === 1 ? 'producto' : 'productos'}</strong> ({itemsCount} {itemsCount === 1 ? 'u./L' : 'u./L'}) • {itemsSummaryText}
-                              </span>
-                            ) : (
-                              <span>{itemsSummaryText}</span>
-                            )}
-                          </div>
-                        </div>
+              {/* Filas de la Grilla */}
+              <div className="divide-y-2 divide-slate-100">
+                {paginatedSales.map(s => {
+                  const clientName = s.customer?.trim() || 'Venta directa';
+
+                  return (
+                    <div 
+                      key={s.id}
+                      className="grid grid-cols-12 gap-1 px-3 py-2.5 items-center text-xs hover:bg-slate-50 transition-colors"
+                    >
+                      {/* 1. Fecha */}
+                      <div className="col-span-3 text-[11px] font-bold text-slate-600 leading-tight">
+                        {formatDate(s.date)}
                       </div>
 
-                      <span className="font-black text-emerald-800 text-sm shrink-0 whitespace-nowrap bg-emerald-50 border-2 border-emerald-200 px-2.5 py-1 rounded-xl">
+                      {/* 2. A quién / Cliente */}
+                      <div className="col-span-4 font-black text-slate-900 truncate pr-1" title={clientName}>
+                        {clientName}
+                      </div>
+
+                      {/* 3. Monto */}
+                      <div className="col-span-2 text-right font-black text-emerald-700 whitespace-nowrap text-xs">
                         +{formatCurrency(s.amount)}
-                      </span>
-                    </div>
-
-                    {/* Fila 2: Metadata (Fecha / Pago) + Acciones (Ojito, Editar, Borrar) */}
-                    <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 text-[11px]">
-                      <div className="text-slate-500 font-bold flex items-center gap-1.5 truncate">
-                        <span>{formatDate(s.date)}</span>
-                        <span>•</span>
-                        <span className="text-slate-700 font-black">{s.paymentMethod || 'Efectivo'}</span>
-                        <span>•</span>
-                        <span className="text-emerald-700 font-black">✓ Cobrado</span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                        {/* 1. Botón Ojito para ver el detalle completo en modal */}
+                      {/* 4. Acciones: Ojito, Editar, Eliminar */}
+                      <div className="col-span-3 flex items-center justify-end gap-1">
+                        {/* Ojito */}
                         <button 
                           type="button"
                           onClick={() => setViewingSale(s)}
-                          className="w-8 h-8 bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-300 rounded-xl flex items-center justify-center font-bold shadow-2xs transition-all active:scale-90"
+                          className="w-7 h-7 bg-blue-50 hover:bg-blue-100 text-blue-700 border-2 border-blue-300 rounded-lg flex items-center justify-center font-bold shadow-2xs transition-all active:scale-90"
                           title="Ver detalle del pedido"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3.5 h-3.5" />
                         </button>
 
-                        {/* 2. Botón Editar */}
+                        {/* Editar */}
                         <button 
                           type="button"
                           onClick={() => startEditSale(s)}
-                          className="w-8 h-8 bg-amber-400 hover:bg-amber-500 text-amber-950 border-2 border-amber-500 rounded-xl flex items-center justify-center font-bold shadow-2xs transition-all active:scale-90"
+                          className="w-7 h-7 bg-amber-400 hover:bg-amber-500 text-amber-950 border-2 border-amber-500 rounded-lg flex items-center justify-center font-bold shadow-2xs transition-all active:scale-90"
                           title="Editar Venta"
                         >
-                          <Edit2 className="w-3.5 h-3.5" />
+                          <Edit2 className="w-3 h-3" />
                         </button>
 
-                        {/* 3. Botón Eliminar */}
+                        {/* Eliminar */}
                         <button 
                           type="button"
                           onClick={() => onDeleteSale(s.id)}
-                          className="w-8 h-8 bg-red-600 hover:bg-red-700 text-white border-2 border-red-700 rounded-xl flex items-center justify-center font-bold shadow-2xs transition-all active:scale-90"
+                          className="w-7 h-7 bg-red-600 hover:bg-red-700 text-white border-2 border-red-700 rounded-lg flex items-center justify-center font-bold shadow-2xs transition-all active:scale-90"
                           title="Eliminar Venta"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-3 h-3" />
                         </button>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
 

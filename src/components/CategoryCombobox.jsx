@@ -34,12 +34,6 @@ export default function CategoryCombobox({
     };
   }, [isOpen]);
 
-  // Autofoco en el input de búsqueda al abrir
-  useEffect(() => {
-    if (isOpen && searchInputRef.current) {
-      setTimeout(() => searchInputRef.current?.focus(), 50);
-    }
-  }, [isOpen]);
 
   const selectedObj = categories.find(c => c.id === selectedCategory);
   const selectedLabel = selectedCategory === 'todos' 
