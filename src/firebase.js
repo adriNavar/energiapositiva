@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
 
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,3 +14,26 @@ export const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+// Iniciar sesión anónima silenciosa en segundo plano
+export function initAnonymousAuth() {
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        resolve(user);
+      } else {
+        try {
+          const userCred = await signInAnonymously(auth);
+          resolve(userCred.user);
+        } catch (error) {
+          console.warn("Autenticación anónima pendiente de activación en consola:", error);
+          resolve(null);
+        }
+      }
+    });
+  });
+}
+
+// Iniciar automáticamente al cargar la aplicación
+initAnonymousAuth().catch(console.error);

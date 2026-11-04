@@ -1,8 +1,20 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Colección empresa: Lectura y escritura protegida para la app autenticada
+    match /empresa/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Colección auditoría: Solo lectura y creación, PROHIBIDO modificar o borrar
+    match /audit_logs/{logId} {
+      allow read, create: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    // Bloqueo total por defecto para cualquier otra colección
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
